@@ -231,6 +231,90 @@ feature -- Test routines
 		end
 
 
+	test_attachments_representation
+		local
+			l_coll : detachable CJ_COLLECTION
+		do
+			l_coll := json_to_cj ("attachment_representation.json")
+			assert ("Not Void", l_coll /= Void)
+			if l_coll /= Void then
+				assert ("Expected version 1.0", l_coll.version ~ "1.0")
+				assert ("Expected href value http://example.org/friends/", l_coll.href ~ "http://example.org/friends/")
+				-- template
+				assert ("Template is not void", l_coll.template /= Void)
+				if attached {CJ_TEMPLATE } l_coll.template as l_template then
+					assert ("Expect 3 elements", l_template.data.count = 3)
+					if attached l_template.data.at (3).files as l_files then
+						assert ("Expected key: file1.txt", l_files.has ("file1.txt"))
+
+					end
+				end
+			end
+		end
+
+	test_acceptable_url_representation
+		local
+			l_coll : detachable CJ_COLLECTION
+		do
+			l_coll := json_to_cj ("acceptable_url_representation.json")
+			assert ("Not Void", l_coll /= Void)
+			if l_coll /= Void then
+				assert ("Expected version 1.0", l_coll.version ~ "1.0")
+				assert ("Expected href value http://example.org/friends/", l_coll.href ~ "http://example.org/friends/")
+				-- template
+				assert ("Template is not void", l_coll.template /= Void)
+				if attached {CJ_TEMPLATE } l_coll.template as l_template then
+					assert ("Expect 3 elements", l_template.data.count = 3)
+					if attached l_template.data.at (3).acceptable_url as l_url then
+						assert ("Expected URL: http://localhost:9090/status", l_url.same_string ("http://localhost:9090/status"))
+
+					end
+				end
+			end
+		end
+
+	test_acceptable_list_representation
+		local
+			l_coll : detachable CJ_COLLECTION
+		do
+			l_coll := json_to_cj ("acceptable_list_representation.json")
+			assert ("Not Void", l_coll /= Void)
+			if l_coll /= Void then
+				assert ("Expected version 1.0", l_coll.version ~ "1.0")
+				assert ("Expected href value http://example.org/friends/", l_coll.href ~ "http://example.org/friends/")
+				-- template
+				assert ("Template is not void", l_coll.template /= Void)
+				if attached {CJ_TEMPLATE } l_coll.template as l_template then
+					assert ("Expect 3 elements", l_template.data.count = 3)
+					if attached l_template.data.at (3).acceptable_list as l_list then
+						assert ("Expect Open", l_list.at (1).same_string ("Open"))
+						assert ("Expect Won't Fix", l_list.at (4).same_string ("Won't Fix"))
+					end
+				end
+			end
+		end
+
+	test_acceptable_map_representation
+		local
+			l_coll : detachable CJ_COLLECTION
+		do
+			l_coll := json_to_cj ("acceptable_map_representation.json")
+			assert ("Not Void", l_coll /= Void)
+			if l_coll /= Void then
+				assert ("Expected version 1.0", l_coll.version ~ "1.0")
+				assert ("Expected href value http://example.org/friends/", l_coll.href ~ "http://example.org/friends/")
+				-- template
+				assert ("Template is not void", l_coll.template /= Void)
+				if attached {CJ_TEMPLATE } l_coll.template as l_template then
+					assert ("Expect 3 elements", l_template.data.count = 3)
+					if attached l_template.data.at (3).acceptable_map as l_map then
+						assert ("Expect Open", attached l_map.at ("1") as l_item and then l_item.same_string ("Open"))
+						assert ("Expect Won't Fix", attached l_map.at ("4") as l_item and then l_item.same_string ("Won't Fix"))
+					end
+				end
+			end
+		end
+
 feature -- Implementation
 
 
@@ -313,16 +397,16 @@ feature -- Implementation
 		do
 			Result := (create {EXECUTION_ENVIRONMENT}).current_working_directory
 			Result.append_character ((create {OPERATING_ENVIRONMENT}).directory_separator)
-			from
-				i := 5
-			until
-				i = 0
-			loop
-				Result.append_character ('.')
-				Result.append_character ('.')
-				Result.append_character ((create {OPERATING_ENVIRONMENT}).directory_separator)
-				i := i - 1
-			end
+--			from
+--				i := 5
+--			until
+--				i = 0
+--			loop
+--				Result.append_character ('.')
+--				Result.append_character ('.')
+--				Result.append_character ((create {OPERATING_ENVIRONMENT}).directory_separator)
+--				i := i - 1
+--			end
 		end
 
 end

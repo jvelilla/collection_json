@@ -32,6 +32,14 @@ feature -- Initialization
 			test_queries
 			print ("%Ntest collection%N")
 			test_collection
+			print ("%Ntest files attachments%N")
+			test_attachment
+			print ("%Ntest acceptable url%N")
+			test_acceptable_url
+			print ("%Ntest acceptable list%N")
+			test_acceptable_list
+			print ("%Ntest acceptable map%N")
+			test_acceptable_map
 		end
 
 	initialize_converters
@@ -307,6 +315,108 @@ feature -- Initialization
 			end
 		end
 
+	test_attachment
+			--{
+			-- "data" : [
+			--{"name" : "full-name", "value" : "", "prompt" : "Full Name"},
+			--{"name" : "email", "value" : "", "prompt" : "Email"},
+			--{"name" : "blog", "value" : "", "prompt" : "Blog"},
+			--{"name" : "avatar", "value" : "", "prompt" : "Avatar"}
+			-- {"name" : "attachments", "files" : [ {"name": "file1.txt", "value": "content"} ] , "prompt" : "Attachments"}
+			--]
+			-- }
+		local
+			l_template: CJ_TEMPLATE
+		do
+			create l_template.make
+			l_template.add_data (new_data ("full-name", "", "Full Name"))
+			l_template.add_data (new_data ("email", "", "Email"))
+			l_template.add_data (new_data ("blog", "", "Blog"))
+			l_template.add_data (new_data ("avatar", "", "Avatar"))
+			l_template.add_data (new_data_with_attachments ("attachments", "", "Attachment", new_attachements))
+			if attached {JSON_VALUE} json.value (l_template) as jv then
+				print (pretty_string (jv))
+			end
+		end
+
+	test_acceptable_url
+			--{
+			-- "data" : [
+			--{"name" : "full-name", "value" : "", "prompt" : "Full Name"},
+			--{"name" : "email", "value" : "", "prompt" : "Email"},
+			--{"name" : "blog", "value" : "", "prompt" : "Blog"},
+			--{"name" : "avatar", "value" : "", "prompt" : "Avatar"}
+			-- {"name" : "status", "acceptableValues" : "http://localhost:9090/status","value":""}
+			--]
+			-- }
+		local
+			l_template: CJ_TEMPLATE
+		do
+			create l_template.make
+			l_template.add_data (new_data ("full-name", "", "Full Name"))
+			l_template.add_data (new_data ("email", "", "Email"))
+			l_template.add_data (new_data ("blog", "", "Blog"))
+			l_template.add_data (new_data ("avatar", "", "Avatar"))
+			l_template.add_data (new_data_acceptable_url ("status", "", "http://localhost:9090/status", "Status"))
+			if attached {JSON_VALUE} json.value (l_template) as jv then
+				print (pretty_string (jv))
+			end
+		end
+
+	test_acceptable_list
+			--{
+			-- "data" : [
+			--{"name" : "full-name", "value" : "", "prompt" : "Full Name"},
+			--{"name" : "email", "value" : "", "prompt" : "Email"},
+			--{"name" : "blog", "value" : "", "prompt" : "Blog"},
+			--{"name" : "avatar", "value" : "", "prompt" : "Avatar"}
+			-- {"name" : "status", "acceptableValues" : ["Open","Close","Pending","Won't Fix"],"value":""}
+			--]
+			-- }
+		local
+			l_template: CJ_TEMPLATE
+		do
+			create l_template.make
+			l_template.add_data (new_data ("full-name", "", "Full Name"))
+			l_template.add_data (new_data ("email", "", "Email"))
+			l_template.add_data (new_data ("blog", "", "Blog"))
+			l_template.add_data (new_data ("avatar", "", "Avatar"))
+			l_template.add_data (new_data_acceptable_list ("status", "", new_list, "Status"))
+			if attached {JSON_VALUE} json.value (l_template) as jv then
+				print (pretty_string (jv))
+			end
+		end
+
+
+	test_acceptable_map
+			--{
+			-- "data" : [
+			--{"name" : "full-name", "value" : "", "prompt" : "Full Name"},
+			--{"name" : "email", "value" : "", "prompt" : "Email"},
+			--{"name" : "blog", "value" : "", "prompt" : "Blog"},
+			--{"name" : "avatar", "value" : "", "prompt" : "Avatar"}
+			-- {"name" : "status", "acceptableValues" : [{"id":"1", "name":"Open"},{"id":"2", "name":"Close"},{"id":"3", "name":"Pending"},{"id":"4", "name":"Won't Fix"}] ,"value":""}
+
+			--]
+			-- }
+		local
+			l_template: CJ_TEMPLATE
+		do
+			create l_template.make
+			l_template.add_data (new_data ("full-name", "", "Full Name"))
+			l_template.add_data (new_data ("email", "", "Email"))
+			l_template.add_data (new_data ("blog", "", "Blog"))
+			l_template.add_data (new_data ("avatar", "", "Avatar"))
+			l_template.add_data (new_data_acceptable_map ("status", "", new_map, "Status"))
+			if attached {JSON_VALUE} json.value (l_template) as jv then
+				print (pretty_string (jv))
+			end
+		end
+
+
+
+
+
 	pretty_string (j: JSON_VALUE): STRING_32
 		local
 			v: JSON_PRETTY_STRING_VISITOR
@@ -326,6 +436,41 @@ feature {NONE} -- Implementation
 			Result.set_prompt (prompt)
 		end
 
+	new_data_acceptable_url (name: STRING; value: STRING; a_url: READABLE_STRING_32; prompt: STRING): CJ_DATA
+		do
+			Result := new_data (name, value, prompt)
+			Result.set_acceptable_url (a_url)
+
+		end
+
+	new_data_acceptable_list (name: STRING; value: STRING; a_list: LIST[READABLE_STRING_32]; prompt: STRING): CJ_DATA
+		do
+			Result := new_data (name, value, prompt)
+			Result.set_acceptable_list (a_list)
+		end
+
+	new_data_acceptable_map (name: STRING; value: STRING; a_map: STRING_TABLE[READABLE_STRING_32]; prompt: STRING): CJ_DATA
+		do
+			Result := new_data (name, value, prompt)
+			Result.set_acceptable_map (a_map)
+		end
+
+
+	new_data_with_attachments (name: STRING; value: STRING; prompt: STRING; a_attachments: STRING_TABLE[STRING]): CJ_DATA
+		do
+			Result := new_data (name, value, prompt)
+			from
+				a_attachments.start
+			until
+				a_attachments.after
+			loop
+				Result.add_attachment (a_attachments.key_for_iteration.as_string_32, a_attachments.item_for_iteration.as_string_32)
+				a_attachments.forth
+			end
+
+		end
+
+
 	new_link (href: STRING; rel: STRING; prompt: detachable STRING; name: detachable STRING; render: detachable STRING): CJ_LINK
 		do
 			create Result.make (href, rel)
@@ -338,6 +483,31 @@ feature {NONE} -- Implementation
 			if attached prompt as l_prompt then
 				Result.set_prompt (l_prompt)
 			end
+		end
+
+
+	new_attachements: STRING_TABLE[STRING]
+		do
+			create Result.make(0)
+			Result.put ("content", "file1.txt")
+		end
+
+	new_list: LIST[READABLE_STRING_32]
+		do
+			create {ARRAYED_LIST[READABLE_STRING_32]}Result.make (4)
+			Result.force ("Open")
+			Result.force ("Close")
+			Result.force ("Pending")
+			Result.force ("Won't Fix")
+		end
+
+	new_map: STRING_TABLE[READABLE_STRING_32]
+		do
+			create Result.make (4)
+			Result.force ("Open", "1")
+			Result.force ("Close", "2")
+			Result.force ("Pending","3")
+			Result.force ("Won't Fix","4")
 		end
 
 end
