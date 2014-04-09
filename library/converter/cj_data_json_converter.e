@@ -1,6 +1,5 @@
 note
 	description: "A JSON converter for CJ_DATA"
-	author: ""
 	date: "$Date$"
 	revision: "$Revision$"
 
@@ -47,7 +46,11 @@ feature -- Conversion
 				across l_files as c  loop
 					if attached {JSON_OBJECT} c.item as jo and then attached {JSON_STRING} jo.item("name") as l_key and then
 						attached {JSON_STRING} jo.item("value") as l_content then
-						Result.add_attachment (l_key.item, l_content.item)
+						if is_valid_base64_encoding (l_content.item) then
+							Result.add_attachment (l_key.item, l_content.item)
+						else
+							Result.add_attachment (l_key.item, (create {BASE64}).encoded_string (l_content.item))
+						end
 					end
 				end
 			end
@@ -66,8 +69,8 @@ feature -- Conversion
 					else
 						create l_map.make (0)
 						across l_array as c  loop
-							if attached {JSON_OBJECT} c.item as jo and then attached {JSON_STRING} jo.item("id") as l_key and then
-								attached {JSON_STRING} jo.item("name") as l_content then
+							if attached {JSON_OBJECT} c.item as jo and then attached {JSON_STRING} jo.item("name") as l_key and then
+								attached {JSON_STRING} jo.item("value") as l_content then
 								l_map.force (l_content.item, l_key.item)
 							end
 						end
@@ -97,7 +100,6 @@ feature -- Conversion
 			if attached o.files as o_file then
 				Result.put (to_json_attachments (o_file), files_key)
 			end
-
 			if attached o.acceptable_url as o_url then
 				Result.put (json.value (o_url), accepted_values_key)
 			elseif attached o.acceptable_list as o_list then
@@ -152,8 +154,8 @@ feature -- Conversion
 				a_map.after
 			loop
 				create l_jo.make
-				l_jo.put (create {JSON_STRING}.make_json (a_map.key_for_iteration.as_string_32), create {JSON_STRING}.make_json ("id"))
-				l_jo.put (create {JSON_STRING}.make_json (a_map.item_for_iteration.as_string_32), create {JSON_STRING}.make_json ("name"))
+				l_jo.put (create {JSON_STRING}.make_json (a_map.key_for_iteration.as_string_32), create {JSON_STRING}.make_json ("name"))
+				l_jo.put (create {JSON_STRING}.make_json (a_map.item_for_iteration.as_string_32), create {JSON_STRING}.make_json ("value"))
 				a_map.forth
 				Result.add (l_jo)
 			end
@@ -188,6 +190,24 @@ feature {NONE} -- Implementation
 			create Result.make_json ("acceptableValues")
 		end
 
+feature {NONE} -- Base64 encode
+
+	is_valid_base64_encoding (a_string: STRING): BOOLEAN
+			-- is `a_string' base64 encoded?
+		local
+			l_encoder: BASE64
+			l_string: STRING
+			l_retry: BOOLEAN
+		do
+			if not l_retry then
+				create l_encoder
+				l_string := l_encoder.decoded_string (a_string)
+				Result := not l_encoder.has_error
+			end
+		rescue
+			l_retry := True
+			retry
+		end
 note
 	copyright: "2011-2014, Javier Velilla, Jocelyn Fiat and others"
 	license: "Eiffel Forum License v2 (see http://www.eiffel.com/licensing/forum.txt)"
