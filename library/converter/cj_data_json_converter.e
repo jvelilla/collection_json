@@ -43,14 +43,11 @@ feature -- Conversion
 				Result.set_value (l_value.out)
 			end
 			if attached {JSON_ARRAY} j.item (files_key) as l_files then
+				Result.initilize_attachment
 				across l_files as c  loop
 					if attached {JSON_OBJECT} c.item as jo and then attached {JSON_STRING} jo.item("name") as l_key and then
 						attached {JSON_STRING} jo.item("value") as l_content then
-						if is_valid_base64_encoding (l_content.item) then
 							Result.add_attachment (l_key.item, l_content.item)
-						else
-							Result.add_attachment (l_key.item, (create {BASE64}).encoded_string (l_content.item))
-						end
 					end
 				end
 			end
@@ -190,24 +187,7 @@ feature {NONE} -- Implementation
 			create Result.make_json ("acceptableValues")
 		end
 
-feature {NONE} -- Base64 encode
 
-	is_valid_base64_encoding (a_string: STRING): BOOLEAN
-			-- is `a_string' base64 encoded?
-		local
-			l_encoder: BASE64
-			l_string: STRING
-			l_retry: BOOLEAN
-		do
-			if not l_retry then
-				create l_encoder
-				l_string := l_encoder.decoded_string (a_string)
-				Result := not l_encoder.has_error
-			end
-		rescue
-			l_retry := True
-			retry
-		end
 note
 	copyright: "2011-2014, Javier Velilla, Jocelyn Fiat and others"
 	license: "Eiffel Forum License v2 (see http://www.eiffel.com/licensing/forum.txt)"

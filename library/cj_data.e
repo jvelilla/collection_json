@@ -103,7 +103,16 @@ feature -- Element Change
 			value_set: value ~ a_value
 		end
 
+	initilize_attachment
+		do
+			create files.make (0)
+		ensure
+			files_set: attached files
+		end
+
 	add_attachment (a_key: READABLE_STRING_32; a_content: READABLE_STRING_32)
+			-- Add a file with a key `a_key' and their content `a_content'.
+			-- The content is added in BASE64 encoding, the content will be encoded if needed.
 		local
 			l_files: like files
 		do
@@ -112,7 +121,11 @@ feature -- Element Change
 				create l_files.make(0)
 				files := l_files
 			end
-			l_files.force (a_content, a_key)
+--			if is_valid_base64_encoding (a_content) then
+--				l_files.force (a_content, a_key)
+--			else
+				l_files.force ((create {BASE64}).encoded_string (a_content), a_key)
+--			end
 		end
 
 	set_acceptable_url (a_url: READABLE_STRING_32)
@@ -139,6 +152,25 @@ feature -- Element Change
 			acceptable_values_set: acceptable_values = a_map
 		end
 
+
+feature {NONE} -- Base64 encode
+
+	is_valid_base64_encoding (a_string: STRING): BOOLEAN
+			-- is `a_string' base64 encoded?
+		local
+			l_encoder: BASE64
+			l_string: STRING
+			l_retry: BOOLEAN
+		do
+			if not l_retry then
+				create l_encoder
+				l_string := l_encoder.decoded_string (a_string)
+				Result := not l_encoder.has_error
+			end
+		rescue
+			l_retry := True
+			retry
+		end
 
 note
 	copyright: "2011-2014, Javier Velilla, Jocelyn Fiat and others"
